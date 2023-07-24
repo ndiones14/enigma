@@ -1,100 +1,114 @@
 #! /usr/bin/env bash
 
+
+#main display
+display() {
+    echo -e "\n0. Exit"
+    echo "1. Create a file"
+    echo "2. Read a file"
+    echo "3. Encrypt a file"
+    echo "4. Decrypt a file"
+    echo "Enter an option:"
+}
+
 # comment out check_valid function for now
-check_valid(){
+check_valid_file(){
+    # regular expression for letters and dots
+    re='^[a-zA-Z.]+$' 
+    if [[ "$1" =~ $re ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+check_valid_message(){
     # regular expression for Capital letters and spaces
     re='^[A-Z ]+$' 
     if [[ "$1" =~ $re ]]; then
         return 0
     else
-        echo "This is not a valid message!"
         return 1
     fi
 }
 
-
-#check valid character
-
-encrypt_message() {
-    new_string=""
-    for (( i=0; i<${#1}; i++ )); do
-        current_char="${1:i:1}"
-        if [[ "$current_char" == " " ]]; then
-            new_string+=" "
-            continue
+function1(){
+    echo "Enter the filename:"
+    read file_name
+    if check_valid_file $file_name; then
+        echo "Enter a message:"
+        read message
+        if check_valid_message "$message"; then
+            touch $file_name
+            echo "$message" >> $file_name
+            echo "The file was created successfully!"
         else
-            ascii_code=$(printf "%d\n" "'$current_char")
-            ascii_code=$(($ascii_code + 3))
-            if [ "$ascii_code" -gt 90 ]; then
-                ascii_code=$(($ascii_code - 26))
-            fi
-            encrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
-            new_string+="$encrypted_char"
+            echo "This is not a valid message!"
         fi
-    done
-    echo "Encrypted message:"
-    echo "$new_string"
-
-}
-
-encrypt() {
-    echo "Enter a message:"
-    read message
-    if check_valid $message ; then
-        encrypt_message "$message"
+    else
+        echo "File name can contain letters and dots only!"
     fi
-
 }
-
-decrypt_message() {
-    new_string=""
-    for (( i=0; i<${#1}; i++ )); do
-        current_char="${1:i:1}"
-        if [[ "$current_char" == " " ]]; then
-            new_string+=" "
-            continue
-        else
-            ascii_code=$(printf "%d\n" "'$current_char")
-            ascii_code=$(($ascii_code - 3))
-            if [ "$ascii_code" -lt 65 ]; then
-                ascii_code=$(($ascii_code + 26))
-            fi
-            decrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
-            new_string+="$decrypted_char"
-        fi
-    done
-    echo "Decrypted message:"
-    echo "$new_string"
-
-}
-
-decrypt() {
-    echo "Enter a message:"
-    read message
-    if check_valid $message ; then
-        decrypt_message "$message"
+function2 (){
+    echo "Enter the filename:"
+    read file_name
+    if [[ -f $file_name ]]; then
+        echo "File content:"
+        cat $file_name
+    else
+        echo "File not found!"
     fi
-
 }
 
-echo "Type 'e' to encrypt, 'd' to decrypt a message:"
-echo "Enter a command:"
-read command
+function3(){
+    echo "Not implemented!"
+}
 
-case $command in
-    'e')
-        # Does Encryption
-        encrypt
-        ;;        
+function4(){
+    echo "Not implemented!"
+}
 
-    'd')
-        # Does Decryption
-        decrypt
-        ;;
- 
-    *)
-        # Default Case
-        echo "Invalid command!"
-        ;;
-esac
+selection() {
+    
+    case $1 in
+        0)
+            # Exits Program
+            echo "See you later!"
+            return 0
+            ;;        
 
+        1)
+            # Create a File
+            function1
+            ;;
+        2)
+            # Read a File
+            function2
+            ;;
+
+        3)
+            # Encrypt a File
+            function3
+            ;;
+        4)
+            # Decrypt a File
+            function4
+            ;;        
+        *)
+            # Default Case
+            echo "Invalid option!"
+            ;;
+    esac
+    return 1
+}
+
+echo "Welcome to the Enigma!"
+while true
+do
+
+    display
+    read choice
+    if selection $choice; then
+        break
+    fi
+done
