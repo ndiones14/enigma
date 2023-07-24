@@ -1,50 +1,100 @@
 #! /usr/bin/env bash
 
 # comment out check_valid function for now
-: <<'COMMENT'
 check_valid(){
     # regular expression for Capital letters and spaces
     re='^[A-Z ]+$' 
     if [[ "$1" =~ $re ]]; then
-        echo "This is a valid message!"
+        return 0
     else
         echo "This is not a valid message!"
+        return 1
     fi
 }
-COMMENT
+
 
 #check valid character
-check_char(){
-    re='^[A-Z]$' 
-    if [[ "$1" =~ $re ]]; then
-        return 0
-    else
-        return 1
-    fi
+
+encrypt_message() {
+    new_string=""
+    for (( i=0; i<${#1}; i++ )); do
+        current_char="${1:i:1}"
+        if [[ "$current_char" == " " ]]; then
+            new_string+=" "
+            continue
+        else
+            ascii_code=$(printf "%d\n" "'$current_char")
+            ascii_code=$(($ascii_code + 3))
+            if [ "$ascii_code" -gt 90 ]; then
+                ascii_code=$(($ascii_code - 26))
+            fi
+            encrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
+            new_string+="$encrypted_char"
+        fi
+    done
+    echo "Encrypted message:"
+    echo "$new_string"
+
 }
-check_key(){
-    re='^[0-9]$' 
-    if [[ "$1" =~ $re ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
+
 encrypt() {
-    value=$(printf "%d\n" "'$1")
-    new_value=$(($value+ $2))
-    if [ "$new_value" -gt 90 ]; then
-        new_value=$(($new_value - 26))
+    echo "Enter a message:"
+    read message
+    if check_valid $message ; then
+        encrypt_message "$message"
     fi
-    encrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$new_value")")
-    echo "Encrypted letter: $encrypted_char"
+
 }
-echo "Enter an uppercase letter:"
-read letter
-echo "Enter a key:"
-read key
-if check_char "$letter"  &&  check_key "$key" ; then
-    encrypt $letter $key
-else
-    echo "Invalid key or letter!"
-fi
+
+decrypt_message() {
+    new_string=""
+    for (( i=0; i<${#1}; i++ )); do
+        current_char="${1:i:1}"
+        if [[ "$current_char" == " " ]]; then
+            new_string+=" "
+            continue
+        else
+            ascii_code=$(printf "%d\n" "'$current_char")
+            ascii_code=$(($ascii_code - 3))
+            if [ "$ascii_code" -lt 65 ]; then
+                ascii_code=$(($ascii_code + 26))
+            fi
+            decrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
+            new_string+="$decrypted_char"
+        fi
+    done
+    echo "Decrypted message:"
+    echo "$new_string"
+
+}
+
+decrypt() {
+    echo "Enter a message:"
+    read message
+    if check_valid $message ; then
+        decrypt_message "$message"
+    fi
+
+}
+
+echo "Type 'e' to encrypt, 'd' to decrypt a message:"
+echo "Enter a command:"
+read command
+
+case $command in
+    'e')
+        # Does Encryption
+        encrypt
+        ;;        
+
+    'd')
+        # Does Decryption
+        decrypt
+        ;;
+ 
+    *)
+        # Default Case
+        echo "Invalid command!"
+        ;;
+esac
+
