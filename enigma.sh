@@ -32,45 +32,31 @@ check_valid_message(){
     fi
 }
 
-encrypt_message() {
-    new_string=""
-    for (( i=0; i<${#1}; i++ )); do
-        current_char="${1:i:1}"
-        if [[ "$current_char" == " " ]]; then
-            new_string+=" "
-            continue
-        else
-            ascii_code=$(printf "%d\n" "'$current_char")
-            ascii_code=$(($ascii_code + 3))
-            if [ "$ascii_code" -gt 90 ]; then
-                ascii_code=$(($ascii_code - 26))
-            fi
-            encrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
-            new_string+="$encrypted_char"
-        fi
-    done
-    echo "$new_string"
+encrypt_file() {
+    echo "Enter password:"
+    read password
+    openssl enc -aes-256-cbc -e -pbkdf2 -nosalt -in "$1" -out "$1.enc" -pass pass:"$password" 2>/dev/null
+    exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        rm $1
+        echo "Success"
+    else
+        echo "Fail"
+    fi
 
 }
 
-decrypt_message() {
-    new_string=""
-    for (( i=0; i<${#1}; i++ )); do
-        current_char="${1:i:1}"
-        if [[ "$current_char" == " " ]]; then
-            new_string+=" "
-            continue
-        else
-            ascii_code=$(printf "%d\n" "'$current_char")
-            ascii_code=$(($ascii_code - 3))
-            if [ "$ascii_code" -lt 65 ]; then
-                ascii_code=$(($ascii_code + 26))
-            fi
-            decrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
-            new_string+="$decrypted_char"
-        fi
-    done
-    echo "$new_string"
+decrypt_file() {
+    echo "Enter password:"
+    read password
+    openssl enc -aes-256-cbc -d -pbkdf2 -nosalt -in "$1" -out "${file_name:0:-4}" -pass pass:"$password" 2>/dev/null
+    exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        rm $1
+        echo "Success"
+    else
+        echo "Fail"
+    fi
 
 }
 
@@ -105,14 +91,8 @@ function2 (){
 function3(){
     echo "Enter the filename:"
     read file_name
-    if find "$file_name" >/dev/null; then
-        file_contents=$(cat $file_name)
-        encrypted_contents=$(encrypt_message "$file_contents")
-        rm $file_name
-        file_name+=".enc"
-        touch $file_name
-        echo "$encrypted_contents" >> $file_name
-        echo "Success"
+    if find "$file_name" &>/dev/null; then
+        encrypt_file "$file_name"
 
     else
         echo "File not found!"
@@ -123,14 +103,8 @@ function3(){
 function4(){
     echo "Enter the filename:"
     read file_name
-    if find "$file_name" >/dev/null; then
-        file_contents=$(cat $file_name)
-        decrypted_contents=$(decrypt_message "$file_contents")
-        rm $file_name
-        new_file_name="${file_name:0:-4}"
-        touch $new_file_name
-        echo "$decrypted_contents" >> $new_file_name
-        echo "Success"
+    if find "$file_name" &>/dev/null; then
+        decrypt_file "$file_name"
 
     else
         echo "File not found!"
