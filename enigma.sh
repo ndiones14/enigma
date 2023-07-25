@@ -32,6 +32,48 @@ check_valid_message(){
     fi
 }
 
+encrypt_message() {
+    new_string=""
+    for (( i=0; i<${#1}; i++ )); do
+        current_char="${1:i:1}"
+        if [[ "$current_char" == " " ]]; then
+            new_string+=" "
+            continue
+        else
+            ascii_code=$(printf "%d\n" "'$current_char")
+            ascii_code=$(($ascii_code + 3))
+            if [ "$ascii_code" -gt 90 ]; then
+                ascii_code=$(($ascii_code - 26))
+            fi
+            encrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
+            new_string+="$encrypted_char"
+        fi
+    done
+    echo "$new_string"
+
+}
+
+decrypt_message() {
+    new_string=""
+    for (( i=0; i<${#1}; i++ )); do
+        current_char="${1:i:1}"
+        if [[ "$current_char" == " " ]]; then
+            new_string+=" "
+            continue
+        else
+            ascii_code=$(printf "%d\n" "'$current_char")
+            ascii_code=$(($ascii_code - 3))
+            if [ "$ascii_code" -lt 65 ]; then
+                ascii_code=$(($ascii_code + 26))
+            fi
+            decrypted_char=$(printf "%b\n" "$(printf "\\%03o" "$ascii_code")")
+            new_string+="$decrypted_char"
+        fi
+    done
+    echo "$new_string"
+
+}
+
 function1(){
     echo "Enter the filename:"
     read file_name
@@ -61,11 +103,38 @@ function2 (){
 }
 
 function3(){
-    echo "Not implemented!"
+    echo "Enter the filename:"
+    read file_name
+    if find "$file_name" >/dev/null; then
+        file_contents=$(cat $file_name)
+        encrypted_contents=$(encrypt_message "$file_contents")
+        rm $file_name
+        file_name+=".enc"
+        touch $file_name
+        echo "$encrypted_contents" >> $file_name
+        echo "Success"
+
+    else
+        echo "File not found!"
+    fi
+
 }
 
 function4(){
-    echo "Not implemented!"
+    echo "Enter the filename:"
+    read file_name
+    if find "$file_name" >/dev/null; then
+        file_contents=$(cat $file_name)
+        decrypted_contents=$(decrypt_message "$file_contents")
+        rm $file_name
+        new_file_name="${file_name:0:-4}"
+        touch $new_file_name
+        echo "$decrypted_contents" >> $new_file_name
+        echo "Success"
+
+    else
+        echo "File not found!"
+    fi
 }
 
 selection() {
